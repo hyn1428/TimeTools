@@ -157,11 +157,19 @@
             document.getElementById("time2-label").innerText = labels[currentMode][1];
 
             document.getElementById("time1").innerText = new Date(times[0]).toLocaleTimeString("en-US", { hour12: false });
-            document.getElementById("date1").innerText = new Date(times[0]).toLocaleDateString();
+            document.getElementById("date1").innerText = new Date(times[0]).toLocaleDateString("zh-TW", {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+});
             document.getElementById("weekday1").innerText = new Date(times[0]).toLocaleString("zh-TW", { weekday: "long" });
 
             document.getElementById("time2").innerText = new Date(times[1]).toLocaleTimeString("en-US", { hour12: false });
-            document.getElementById("date2").innerText = new Date(times[1]).toLocaleDateString();
+            document.getElementById("date2").innerText = new Date(times[1]).toLocaleDateString("zh-TW", {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+});
             document.getElementById("weekday2").innerText = new Date(times[1]).toLocaleString("zh-TW", { weekday: "long" });
 
             document.getElementById("toggleButton").innerText =
