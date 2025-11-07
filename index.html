@@ -1,252 +1,280 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>世界時間轉換</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="image/clock-icon.ico" sizes="64x64" type="image/x-icon">
-    
-    <style>
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background: linear-gradient(to right, #f2f7ff, #e6ecff);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: start;
-            min-height: 100vh;
-            color: #333; /* 通用文字顏色 */
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>世界時間轉換</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="image/clock-icon.ico" sizes="64x64" type="image/x-icon">
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: linear-gradient(to right, #f2f7ff, #e6ecff);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: start;
+      min-height: 100vh;
+      color: #333;
+    }
+    h1 { margin-top: 40px; color: #FF6B3B; font-size: 40px; font-weight: 700; }
+
+    .buttons { margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap; }
+    button {
+      background-color: #0056b3;
+      color: white;
+      font-size: 18px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, opacity 0.2s ease;
+    }
+    button:hover { background-color: #003d7a; }
+    button[disabled] { opacity: 0.5; cursor: default; }
+
+    .container {
+      display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+      gap: 30px; margin-top: 40px;
+    }
+    .time-box {
+      background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      width: 320px; padding: 25px; text-align: center;
+    }
+    .label { font-size: 22px; font-weight: 700; color: #2c3e50; margin-bottom: 15px; }
+    .time { font-size: 48px; font-weight: 700; color: #007BFF; }
+    .date { font-size: 22px; color: #28a745; margin-top: 10px; }
+    .weekday { font-size: 18px; color: #7f8c8d; margin-top: 10px; }
+
+    /* DST 區塊置中與更緊湊的等高 */
+    #dst-section {
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    .dst-title { margin-top: 60px; font-size: 26px; font-weight: 700; color: #FF6B3B; text-align: center; }
+    .dst-controls {
+      margin-top: 12px;
+      display: flex;
+      gap: 84px;                /* 加大兩個按鈕間距 */
+      justify-content: center;
+    }
+    .dst-container {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(280px, 1fr));
+      gap: 20px;
+      align-items: stretch;   /* 同一列以最高的格子為行高，其餘自動等高 */
+      justify-items: center;
+      margin-top: 20px;
+    }
+    .dst-box {
+      background: #ffffff; border-radius: 12px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      width: 100%; max-width: 300px; padding: 18px;        /* 微降 padding */
+      font-size: 16px; text-align: left; line-height: 1.55;/* 微降行高 */
+      color: #444;
+      display: flex; flex-direction: column; justify-content: flex-start;
+      min-height: 120px;                                    /* 合理的最小高度 */
+    }
+    .dst-box strong { color: #2980b9; }
+
+    .hidden { display: none; }
+
+    @media (max-width: 768px) {
+      .container { flex-direction: column; gap: 20px; }
+      .time-box { width: 90%; }
+      .dst-container { grid-template-columns: 1fr; }
+      .dst-box { max-width: 100%; }
+      .dst-controls { gap: 16px; }  /* 手機間距稍小 */
+    }
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .dst-container { grid-template-columns: repeat(2, minmax(280px, 1fr)); }
+      .dst-controls { gap: 28px; }  /* 平板按鈕間距更寬 */
+    }
+  </style>
+  <script>
+    let currentMode = "EST_PST"; // 或 "TST_JST"
+    let currentDSTZone = "America/New_York"; // 或 "America/Los_Angeles"
+
+    function updateTime() {
+      const timeZones = {
+        "EST_PST": ["America/New_York", "America/Los_Angeles"],
+        "TST_JST": ["Asia/Taipei", "Asia/Tokyo"]
+      };
+      const labels = {
+        "EST_PST": ["美東時間 (- 5 )", "太平洋時間 (- 8 )"],
+        "TST_JST": ["台灣時間 (+ 8 )", "日本時間 (+ 9 )"]
+      };
+
+      const zones = timeZones[currentMode];
+      const times = zones.map(zone => new Date().toLocaleString("en-US", { timeZone: zone }));
+
+      document.getElementById("time1-label").innerText = labels[currentMode][0];
+      document.getElementById("time2-label").innerText = labels[currentMode][1];
+
+      document.getElementById("time1").innerText = new Date(times[0]).toLocaleTimeString("en-US", { hour12: false });
+      document.getElementById("date1").innerText = new Date(times[0]).toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric" });
+      document.getElementById("weekday1").innerText = new Date(times[0]).toLocaleString("zh-TW", { weekday: "long" });
+
+      document.getElementById("time2").innerText = new Date(times[1]).toLocaleTimeString("en-US", { hour12: false });
+      document.getElementById("date2").innerText = new Date(times[1]).toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric" });
+      document.getElementById("weekday2").innerText = new Date(times[1]).toLocaleString("zh-TW", { weekday: "long" });
+
+      document.getElementById("toggleButton").innerText =
+        currentMode === "EST_PST" ? "切換至 台灣 & 日本" : "切換至 美東 & 太平洋";
+
+      // 顯示或隱藏 DST 區塊與控制
+      const dstSection = document.getElementById("dst-section");
+      const dstControls = document.getElementById("dst-controls");
+      dstSection.classList.toggle("hidden", currentMode === "TST_JST");
+      dstControls.classList.toggle("hidden", currentMode === "TST_JST");
+
+      if (currentMode === "EST_PST") {
+        updateDSTInfo(currentDSTZone);
+      }
+    }
+
+    function toggleTime() {
+      currentMode = currentMode === "EST_PST" ? "TST_JST" : "EST_PST";
+      updateTime();
+    }
+
+    // DST 控制按鈕：美東 / 太平洋（互斥）
+    function selectDSTZone(zone) {
+      currentDSTZone = zone; // "America/New_York" 或 "America/Los_Angeles"
+      document.getElementById("btn-EST").disabled = (zone === "America/New_York");
+      document.getElementById("btn-PST").disabled = (zone === "America/Los_Angeles");
+      updateDSTInfo(zone);
+    }
+
+    function getTimeZoneAbbreviation(timeZone, date = new Date()) {
+      const formatter = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "short" });
+      const parts = formatter.formatToParts(date);
+      const tzPart = parts.find(part => part.type === "timeZoneName");
+      return tzPart ? tzPart.value : "";
+    }
+
+    // 取得當年美國 DST 開始（3月第2個週日）與結束（11月第1個週日）
+    function nthWeekdayOfMonth(year, monthIndex, weekdayIndex, n) {
+      const firstDay = new Date(year, monthIndex, 1);
+      const firstWeekday = firstDay.getDay();
+      const offset = (weekdayIndex - firstWeekday + 7) % 7;
+      const day = 1 + offset + (n - 1) * 7;
+      return new Date(year, monthIndex, day);
+    }
+    function firstWeekdayOfMonth(year, monthIndex, weekdayIndex) {
+      return nthWeekdayOfMonth(year, monthIndex, weekdayIndex, 1);
+    }
+    function formatTWDate(d) {
+      return d.toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric" });
+    }
+
+    function updateDSTInfo(zone) {
+      const now = new Date();
+      const year = now.getFullYear();
+
+      // 美國規則：三月第2個週日 02:00 開始；十一月第1個週日 02:00 結束（依各地本地時間）
+      const dstStartLocal = nthWeekdayOfMonth(year, 2, 0, 2); // 三月(2), 週日(0), 第2個
+      dstStartLocal.setHours(2, 0, 0, 0);
+      const dstEndLocal = firstWeekdayOfMonth(year, 10, 0);   // 十一月(10), 週日(0)
+      dstEndLocal.setHours(2, 0, 0, 0);
+
+      const tzAbbrNow = getTimeZoneAbbreviation(zone, now);
+      const isDSTNow = tzAbbrNow.includes("DT");
+
+      const zoneBase = zone === "America/New_York" ? "E" : "P";
+      const stdAbbr = zoneBase === "E" ? "EST" : "PST";
+      const dstAbbr = zoneBase === "E" ? "EDT" : "PDT";
+      const utcStd = zoneBase === "E" ? "UTC -5:00" : "UTC -8:00";
+      const utcDst = zoneBase === "E" ? "UTC -4:00" : "UTC -7:00";
+
+      let prevTitle = "上一個:", nextTitle = "下一個:";
+      let prevBody = "", nextBody = "";
+
+      if (isDSTNow) {
+        prevBody = `${formatTWDate(dstStartLocal)} (週日)<br> 01:59 → 03:00<br>${stdAbbr} → ${dstAbbr}<br>${utcStd} → ${utcDst}`;
+        nextBody = `${formatTWDate(dstEndLocal)} (週日)<br> 01:59 → 01:00<br>${dstAbbr} → ${stdAbbr}<br>${utcDst} → ${utcStd}`;
+      } else {
+        const hasPassedStart = now >= dstStartLocal;
+        const hasPassedEnd = now >= dstEndLocal;
+
+        if (!hasPassedStart) {
+          const lastYearEnd = firstWeekdayOfMonth(year - 1, 10, 0);
+          lastYearEnd.setHours(2, 0, 0, 0);
+          prevBody = `${formatTWDate(lastYearEnd)} (週日)<br> 01:59 → 01:00<br>${dstAbbr} → ${stdAbbr}<br>${utcDst} → ${utcStd}`;
+          nextBody = `${formatTWDate(dstStartLocal)} (週日)<br> 01:59 → 03:00<br>${stdAbbr} → ${dstAbbr}<br>${utcStd} → ${utcDst}`;
+        } else if (!hasPassedEnd) {
+          prevBody = `${formatTWDate(dstStartLocal)} (週日)<br> 01:59 → 03:00<br>${stdAbbr} → ${dstAbbr}<br>${utcStd} → ${utcDst}`;
+          nextBody = `${formatTWDate(dstEndLocal)} (週日)<br> 01:59 → 01:00<br>${dstAbbr} → ${stdAbbr}<br>${utcDst} → ${utcStd}`;
+        } else {
+          prevBody = `${formatTWDate(dstEndLocal)} (週日)<br> 01:59 → 01:00<br>${dstAbbr} → ${stdAbbr}<br>${utcDst} → ${utcStd}`;
+          const nextYearStart = nthWeekdayOfMonth(year + 1, 2, 0, 2);
+          nextYearStart.setHours(2, 0, 0, 0);
+          nextBody = `${formatTWDate(nextYearStart)} (週日)<br> 01:59 → 03:00<br>${stdAbbr} → ${dstAbbr}<br>${utcStd} → ${utcDst}`;
         }
+      }
 
-        h1 {
-            margin-top: 40px;
-            color: #FF6B3B; /* 橙色標題 */
-            font-size: 40px;
-            font-weight: 700;
-        }
+      const zoneNowAbbr = getTimeZoneAbbreviation(zone);
+      const utcOffsetNow = isDSTNow ? utcDst : utcStd;
+      const dstStatus = isDSTNow ? "DST On" : "DST Off";
 
-        .buttons {
-            margin-top: 20px;
-        }
+      document.getElementById("dst-prev").innerHTML =
+        `<strong>${prevTitle}</strong><br>${prevBody}`;
+      document.getElementById("dst-current").innerHTML =
+        `<strong>現在:</strong><br>時區: ${zoneNowAbbr}<br>${utcOffsetNow}<br>${dstStatus}`;
+      document.getElementById("dst-next").innerHTML =
+        `<strong>${nextTitle}</strong><br>${nextBody}`;
+    }
 
-        button {
-            background-color: #0056b3; /* 深藍色 */
-            color: white;
-            font-size: 18px;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #003d7a; /* 深藍色 hover */
-        }
-
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .time-box {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            width: 320px;
-            padding: 25px;
-            text-align: center;
-        }
-
-        .label {
-            font-size: 22px;
-            font-weight: 700;
-            color: #2c3e50; /* 深灰藍色 */
-            margin-bottom: 15px;
-        }
-
-        .time {
-            font-size: 48px;
-            font-weight: 700;
-            color: #007BFF; /* 藍色 */
-        }
-
-        .date {
-            font-size: 22px;
-            color: #28a745; /* 綠色 */
-            margin-top: 10px;
-        }
-
-        .weekday {
-            font-size: 18px;
-            color: #7f8c8d; /* 淺灰色 */
-            margin-top: 10px; /* 這是用來把星期移到日期下面 */
-        }
-
-        .dst-title {
-            margin-top: 60px;
-            font-size: 26px;
-            font-weight: 700;
-            color: #FF6B3B; /* 橙色標題 */
-        }
-
-        .dst-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: flex-start;
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .dst-box {
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            width: 300px;
-            padding: 20px;
-            font-size: 16px;
-            text-align: left;
-            line-height: 1.6;
-            color: #444; /* 淺灰色文字 */
-        }
-
-        .dst-box strong {
-            color: #2980b9; /* 強調文字顏色，亮藍色 */
-        }
-
-        @media (max-width: 768px) {
-            .container, .dst-container {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .time-box, .dst-box {
-                width: 90%;
-            }
-        }
-    </style>
-
-    <script>
-        let currentMode = "EST_PST";
-
-        function updateTime() {
-            const timeZones = {
-                "EST_PST": ["America/New_York", "America/Los_Angeles"],
-                "TST_JST": ["Asia/Taipei", "Asia/Tokyo"]
-            };
-
-            const labels = {
-                "EST_PST": ["美東時間 (- 5 )", "太平洋時間 (- 8 )"],
-                "TST_JST": ["台灣時間 (+ 8 )", "日本時間 (+ 9 )"]
-            };
-
-            const zones = timeZones[currentMode];
-            const times = zones.map(zone =>
-                new Date().toLocaleString("en-US", { timeZone: zone })
-            );
-
-            document.getElementById("time1-label").innerText = labels[currentMode][0];
-            document.getElementById("time2-label").innerText = labels[currentMode][1];
-
-            document.getElementById("time1").innerText = new Date(times[0]).toLocaleTimeString("en-US", { hour12: false });
-            document.getElementById("date1").innerText = new Date(times[0]).toLocaleDateString("zh-TW", {
-    year: "numeric",
-    month: "long",
-    day: "numeric"
-});
-            document.getElementById("weekday1").innerText = new Date(times[0]).toLocaleString("zh-TW", { weekday: "long" });
-
-            document.getElementById("time2").innerText = new Date(times[1]).toLocaleTimeString("en-US", { hour12: false });
-            document.getElementById("date2").innerText = new Date(times[1]).toLocaleDateString("zh-TW", {
-    year: "numeric",
-    month: "long",
-    day: "numeric"
-});
-            document.getElementById("weekday2").innerText = new Date(times[1]).toLocaleString("zh-TW", { weekday: "long" });
-
-            document.getElementById("toggleButton").innerText =
-                currentMode === "EST_PST" ? "切換至 台灣 & 日本" : "切換至 美東 & 太平洋";
-
-            updateDSTInfo();
-        }
-
-        function toggleTime() {
-            currentMode = currentMode === "EST_PST" ? "TST_JST" : "EST_PST";
-            updateTime();
-        }
-
-        function getTimeZoneAbbreviation(timeZone) {
-            const formatter = new Intl.DateTimeFormat("en-US", {
-                timeZone: timeZone,
-                timeZoneName: "short"
-            });
-
-            const parts = formatter.formatToParts(new Date());
-            const tzPart = parts.find(part => part.type === "timeZoneName");
-            return tzPart ? tzPart.value : "";
-        }
-
-        function updateDSTInfo() {
-            const timeZone = "America/Los_Angeles";
-            const tzAbbr = getTimeZoneAbbreviation(timeZone);
-            const isDSTActive = tzAbbr.includes("DT");
-            const zone = tzAbbr;
-            const utcOffset = isDSTActive ? "UTC -7:00" : "UTC -8:00";
-            const dstStatus = isDSTActive ? "DST On" : "DST Off";
-
-            document.getElementById("dst-prev").innerHTML = `
-                <strong>上一個:</strong> 2025年3月9日 (週日)<br>
-                01:59 → 03:00<br>PST → PDT<br>UTC -8 → UTC -7`;
-
-            document.getElementById("dst-current").innerHTML = `
-                <strong>現在:</strong><br>時區: ${zone}<br>UTC: ${utcOffset}<br>${dstStatus}`;
-
-            document.getElementById("dst-next").innerHTML = `
-                <strong>下一個:</strong> 2025年11月2日 (週日)<br>
-                01:59 → 01:00<br>PDT → PST<br>UTC -7 → UTC -8`;
-        }
-
-        setInterval(updateTime, 1000);
-    </script>
+    // 每秒更新時間顯示
+    setInterval(updateTime, 1000);
+  </script>
 </head>
-
 <body>
-    <h1>世界時間轉換</h1>
+  <h1>世界時間轉換</h1>
 
-    <div class="buttons">
-        <button id="toggleButton" onclick="toggleTime()">切換至 台灣 & 日本</button>
+  <div class="buttons">
+    <button id="toggleButton" onclick="toggleTime()">切換至 台灣 & 日本</button>
+  </div>
+
+  <div class="container">
+    <div class="time-box">
+      <div class="label" id="time1-label">EST 時間</div>
+      <div class="time" id="time1"></div>
+      <div class="date" id="date1"></div>
+      <div class="weekday" id="weekday1"></div>
     </div>
 
-    <div class="container">
-        <div class="time-box">
-            <div class="label" id="time1-label">EST 時間</div>
-            <div class="time" id="time1"></div>
-            <div class="date" id="date1"></div>
-            <div class="weekday" id="weekday1"></div> <!-- 這裡保留了星期顯示 -->
-        </div>
-        <div class="time-box">
-            <div class="label" id="time2-label">PST 時間</div>
-            <div class="time" id="time2"></div>
-            <div class="date" id="date2"></div>
-            <div class="weekday" id="weekday2"></div> <!-- 這裡保留了星期顯示 -->
-        </div>
+    <div class="time-box">
+      <div class="label" id="time2-label">PST 時間</div>
+      <div class="time" id="time2"></div>
+      <div class="date" id="date2"></div>
+      <div class="weekday" id="weekday2"></div>
     </div>
+  </div>
 
+  <div id="dst-section">
     <div class="dst-title">夏令時間變化</div>
-    <div class="dst-container">
-        <div class="dst-box" id="dst-prev"></div>
-        <div class="dst-box" id="dst-current"></div>
-        <div class="dst-box" id="dst-next"></div>
+
+    <!-- DST 切換按鈕（互斥） -->
+    <div class="dst-controls" id="dst-controls">
+      <button id="btn-EST" onclick="selectDSTZone('America/New_York')" disabled>美東夏令時間</button>
+      <button id="btn-PST" onclick="selectDSTZone('America/Los_Angeles')">太平洋夏令時間</button>
     </div>
 
-    <script>updateTime();</script>
+    <div class="dst-container">
+      <div class="dst-box" id="dst-prev"></div>
+      <div class="dst-box" id="dst-current"></div>
+      <div class="dst-box" id="dst-next"></div>
+    </div>
+  </div>
+
+  <script>
+    // 初始載入
+    updateTime();
+    // 預設顯示美東 DST（按鈕 disabled 表示目前選中）
+    selectDSTZone("America/New_York");
+  </script>
 </body>
 </html>
